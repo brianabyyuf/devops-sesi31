@@ -1,0 +1,40 @@
+name: CI Notes App
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  # Job 1: Lint (ESLint) [cite: 7]
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm install
+      - run: npm run lint
+
+  # Job 2: Unit Test (Jest) [cite: 8]
+  unit-test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install
+      - run: npm test -- --coverage
+
+  # Job 3: SonarQube Scan [cite: 9]
+  sonarqube:
+    needs: unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
